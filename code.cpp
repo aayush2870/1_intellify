@@ -177,3 +177,185 @@ digitalWrite(bz,LOW);
 
 
 }
+
+
+
+
+
+
+
+//now the below written code is of voice assistance to turn right left or front and back
+
+
+
+
+
+
+
+#define MOTOR_A_EN 5
+#define MOTOR_A_1 6
+#define MOTOR_A_2 7
+#define MOTOR_B_EN 9
+#define MOTOR_B_1 10
+#define MOTOR_B_2 11
+
+void setup() {
+  Serial.begin(9600);
+  
+  pinMode(MOTOR_A_EN, OUTPUT);
+  pinMode(MOTOR_A_1, OUTPUT);
+  pinMode(MOTOR_A_2, OUTPUT);
+  
+  pinMode(MOTOR_B_EN, OUTPUT);
+  pinMode(MOTOR_B_1, OUTPUT);
+  pinMode(MOTOR_B_2, OUTPUT);
+}
+
+void stopMotors() {
+  digitalWrite(MOTOR_A_EN, LOW);
+  digitalWrite(MOTOR_B_EN, LOW);
+}
+
+void moveForward() {
+  digitalWrite(MOTOR_A_1, HIGH);
+  digitalWrite(MOTOR_A_2, LOW);
+  digitalWrite(MOTOR_B_1, HIGH);
+  digitalWrite(MOTOR_B_2, LOW);
+  digitalWrite(MOTOR_A_EN, HIGH);
+  digitalWrite(MOTOR_B_EN, HIGH);
+}
+
+void moveBackward() {
+  digitalWrite(MOTOR_A_1, LOW);
+  digitalWrite(MOTOR_A_2, HIGH);
+  digitalWrite(MOTOR_B_1, LOW);
+  digitalWrite(MOTOR_B_2, HIGH);
+  digitalWrite(MOTOR_A_EN, HIGH);
+  digitalWrite(MOTOR_B_EN, HIGH);
+}
+
+void turnRight() {
+  digitalWrite(MOTOR_A_1, HIGH);
+  digitalWrite(MOTOR_A_2, LOW);
+  digitalWrite(MOTOR_B_1, LOW);
+  digitalWrite(MOTOR_B_2, HIGH);
+  digitalWrite(MOTOR_A_EN, HIGH);
+  digitalWrite(MOTOR_B_EN, HIGH);
+}
+
+void turnLeft() {
+  digitalWrite(MOTOR_A_1, LOW);
+  digitalWrite(MOTOR_A_2, HIGH);
+  digitalWrite(MOTOR_B_1, HIGH);
+  digitalWrite(MOTOR_B_2, LOW);
+  digitalWrite(MOTOR_A_EN, HIGH);
+  digitalWrite(MOTOR_B_EN, HIGH);
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    char command = Serial.read();
+    stopMotors();
+    delay(100);
+    
+    if (command == 'F') {
+      moveForward();
+    } else if (command == 'B') {
+      moveBackward();
+    } else if (command == 'R') {
+      turnRight();
+    } else if (command == 'L') {
+      turnLeft();
+    }
+  }
+}
+
+// python code for assistance
+
+
+import serial
+import time
+
+ser = serial.Serial('/dev/ttyUSB0', 9600)  # Change the port as needed
+
+def send_command(command):
+    ser.write(command.encode())
+
+try:
+    while True:
+        direction = input("Enter direction (F/B/R/L): ")
+        if direction in ['F', 'B', 'R', 'L']:
+            send_command(direction)
+        else:
+            print("Invalid direction! Please enter F, B, R, or L.")
+except KeyboardInterrupt:
+    ser.close()
+    print("Serial connection closed.")
+
+
+//GOOGLE MAP USAGE FOR OUR STICK
+
+//we use the  api call by the google map api using python
+
+
+import googlemaps
+
+# Replace 'YOUR_API_KEY' with your actual Google Maps API key
+API_KEY = 'YOUR_API_KEY'
+gmaps = googlemaps.Client(key=API_KEY)
+
+def get_current_location():
+    # Fetch current location data (latitude and longitude)
+    current_location = gmaps.geolocate()
+    return current_location['location']['lat'], current_location['location']['lng']
+
+while True:
+    # Get current location
+    lat, lng = get_current_location()
+    print("Current Latitude:", lat)
+    print("Current Longitude:", lng)
+    # Further processing or interaction with the Arduino can be implemented here
+
+
+// code for gsm module in aurdino 
+
+
+#include <SoftwareSerial.h>
+
+SoftwareSerial gsmModule(7, 8);  // RX, TX pins on Arduino
+
+void setup() {
+  Serial.begin(9600);
+  gsmModule.begin(9600);
+
+  // Wait till module initializes
+  delay(2000);
+  Serial.println("GSM Module initialized.");
+}
+
+void sendSMS(const char *message) {
+  gsmModule.println("AT+CMGF=1"); // SMS mode to text
+  delay(1000);
+
+  gsmModule.print("AT+CMGS=\"989898676\""); // Replace with family phone number
+  delay(1000);
+  gsmModule.write(0x0D); // Send Enter
+  delay(1000);
+
+  gsmModule.print(message);
+  delay(1000);
+  
+  gsmModule.write(0x1A); //  send of the message
+  delay(1000);
+}
+
+void loop() {
+  // Simulated obstacle detection condition
+  bool obstacleDetected = digitalRead(2);  // Change to your actual input pin
+
+  if (obstacleDetected) {
+    sendSMS("Alert: Obstacle Detected!");
+    Serial.println("SMS Sent: Obstacle Detected!");
+    delay(10000); // Delay to avoid sending multiple
+
+
